@@ -138,7 +138,43 @@
 
 ### Liquibase 简介
 
-这部分可以尽可能的短争取，5~10 分钟结束
+Liquibase 是一种数据库模式变更管理解决方案，它让你能够更快、更安全地在各个环境（从开发到生产）修改和发布数据库变更。
+
+为简单起见，你可以直接使用 SQL 编写迁移脚本。也可以使用与数据库无关的方式，即在 XML、JSON 或 YAML 文件中编写你的变更内容，这样可以实现与特定数据库的解绑。
+
+Liquibase 使用 SQL、XML、JSON 或 YAML
+格式的变更日志（ [changelog](https://docs.liquibase.com/concepts/changelogs/working-with-changelogs.html)
+）文件按顺序列出数据库变更（ [changesets](https://docs.liquibase.com/concepts/changelogs/changelog-formats.html)
+）。数据库变更包含变更类型（ [Change Type](https://docs.liquibase.com/change-types/home.html)
+），这是应用于数据库的操作类型，例如添加列或主键、插入、删除等等。
+
+![img](images/liquibase.jpg)
+
+Liquibase 支持 6 种基本类型的命令：update、rollback、snapshot、diff、status 以及 utility。当你使用 update 命令部署你的第一个变更时，Liquibase
+会检查数据库连接信息，包括用户信息、数据库 URL 和 JDBC 驱动程序等，这些信息存储在 liquibase.properties 配置文件中。
+
+当你第一次部署变更时，Liquibase
+会在你的数据库中创建两张表：[DATABASECHANGELOG](https://docs.liquibase.com/concepts/tracking-tables/databasechangelog-table.html)
+和 [DATABASECHANGELOGLOCK](https://docs.liquibase.com/concepts/tracking-tables/databasechangeloglock-table.html) 。
+
+DATABASECHANGELOG 表跟踪已部署的变更。 Liquibase 会将变更日志文件中的变更集与 DATABASECHANGELOG 跟踪表进行比较，仅部署新的变更集。
+
+DATABASECHANGELOGLOCK 可以防止多个 Liquibase 实例同时更新数据库，确保只有一个 Liquibase 实例正在更新数据库。
+
+Liquibase 提供了多种管理数据库变更的方法：
+
+- 运行[命令行客户端](https://docs.liquibase.com/commands/working-with-command-parameters.html) (CLI)。
+
+- 使用 [Liquibase Java API](https://www.liquibase.org/javadoc/) 并将 Liquibase 集成到你的应用程序中。
+
+- 使用 [Maven](https://docs.liquibase.com/tools-integrations/maven/home.html)
+  、 [Spring Boot](https://docs.liquibase.com/tools-integrations/springboot/home.html)
+  、 [Ant](https://docs.liquibase.com/tools-integrations/ant/home.html)
+  、 [Jenkins](https://docs.liquibase.com/workflows/liquibase-community/using-the-jenkins-pipeline-stage-with-spinnaker.html)
+  、 [GitHub Actions](https://docs.liquibase.com/workflows/liquibase-community/setup-github-actions-workflow.html)
+  或其他 CI/CD 工具将 Liquibase 集成到你的构建过程中。
+
+- 以 [Docker](https://docs.liquibase.com/workflows/liquibase-community/using-liquibase-and-docker.html) 容器的方式使用。
 
 ### Liquibase 与 Flyway 的比较
 
@@ -149,6 +185,8 @@
 这里是关键，可否演示一个完整场景，代码库里可以包含完整的命令行、操作流程；提供样例脚本和文件，帮助大家快速上手这个工具，提供在流水线里操作数据库变更/升级等流程。
 
 总之所有讲解都是基于功能演示讲清楚这个技术，基于完整的演示流程讲清楚这个工具在 DevOps 流水线中的使用方式。
+
+### Liquibase 方案思考
 
 ## 参考资料
 
