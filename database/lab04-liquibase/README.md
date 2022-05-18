@@ -121,3 +121,10 @@
 这里是关键，可否演示一个完整场景，代码库里可以包含完整的命令行、操作流程；提供样例脚本和文件，帮助大家快速上手这个工具，提供在流水线里操作数据库变更/升级等流程。
 
 总之所有讲解都是基于功能演示讲清楚这个技术，基于完整的演示流程讲清楚这个工具在 DevOps 流水线中的使用方式。
+
+## 参考资料
+
+- Liquibase 官网: https://www.liquibase.org/
+- Flyway 官网: https://flywaydb.org/
+- 纯脚本化管理方案示例代码: https://github.com/soul-craft/db-script-templates
+- Liquibase 管理方案示例代码: https://github.com/soul-craft/liquibase-db-templates
