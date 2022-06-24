@@ -226,7 +226,102 @@ Flyway 也是一个很好用的数据库脚本迁移管理的工具，支持多�
 
 9. 检查输出信息是否存在报错，如果有报错，请根据具体情况分析和解决。
 
-创建好数据库后，可以以此为基础执行数据库变更了。 如果是开发环境，可以使用Maven（本文采用的Maven）、Gradle执行数据库变更，如果是生产环境，
+创建好数据库后，可以以此为基础执行数据库变更了。 如果是开发环境，可以使用Maven（本文采用的Maven）、Gradle执行数据库变更；如果是生产环境，可以使用编译打包后的制品，结合 Liquibase 软件执行数据库变更。
+
+#### 开发环境
+
+接下来我们讲一下 Liquibase 的数据库变更脚本的开发、打包及运行等相关操作。
+
+1. 使用 IDEA 或者 VS Code 打开克隆好的项目，
+2. 打开 pom.xml 文件，可以看到，我们添加了 `MySQL` 的驱动依赖，各位可以自行选择合适的驱动版本，
+
+    ```xml
+    <dependencies>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.25</version>
+        </dependency>
+    </dependencies>
+    ```
+
+3. 添加了 liquibase-maven-plugin 插件，
+    ```xml
+   <plugin>
+        <groupId>org.liquibase</groupId>
+        <artifactId>liquibase-maven-plugin</artifactId>
+        <version>4.3.1</version>
+        <configuration>
+            <propertyFile>target/classes/liquibase.properties</propertyFile>
+            <outputChangeLogFile>target/changelog.xml</outputChangeLogFile>
+        </configuration>
+    </plugin>
+    ```
+   其中 `propertyFile` 指定 `Maven` 编译后的 liquibase.properties 配置文件路径，`outputChangeLogFile` 指定的是从存量数据库生成数据库变更脚本时的输出文件路径，此配置项不是必须的。
+
+4. 示例工程为了区分开发环境与生产环境，添加了 profile，并且默认启用的是开发环境，即 `dev` ，
+    ```xml
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <properties>
+                <profiles.active>dev</profiles.active>
+            </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+        <profile>
+            <id>prod</id>
+            <properties>
+                <profiles.active>prod</profiles.active>
+            </properties>
+        </profile>
+    </profiles>
+    ```
+   并在 <build> 指定了资源相关的配置：
+    ```xml
+    <resources>
+        <resource>
+            <directory>src/main/resources</directory>
+            <excludes>
+                <exclude>profiles/**/*</exclude>
+            </excludes>
+        </resource>
+        <resource>
+            <directory>src/main/resources/profiles/${profiles.active}</directory>
+        </resource>
+    </resources>
+    ```
+   
+5. 打开 配置文件，可以看到，
+
+    ```properties
+    changeLogFile=db/changelog/changelog-master.xml
+    url=jdbc:mysql://localhost:3306/liquibase_test
+    username=liquibase
+    password=liquibase
+    driver=com.mysql.cj.jdbc.Driver
+    classpath=dependency/mysql-connector-java-8.0.25.jar
+    liquibase.hub.mode=off
+    logLevel=INFO
+    logFile=liquibase.log
+    ```
+    其中，
+
+    1. `changeLogFile` 指定主引导文件路径，在此文件中指定了所有的数据库变更操作脚本，以及相应的执行顺序（从上到下依次执行），
+   
+    2. `url`，`username`，`password`，`driver`，指定数据库相关的配置，包括链接URL、用户名、密码及驱动类名，
+
+    3. `classpath` 指定`MySQL`驱动的位置，由于我们将驱动打包到了 dependency 目录，所以这里指定的是 `dependency/mysql-connector-java-8.0.25.jar`，
+
+    4. `liquibase.hub.mode`，指定是否将数据发往 liquibase 以供其分析，示例选择不使用，
+
+    5. `logLevel`，`logFile`，指定日志相关的配置。
+
+6. 以上就是 `Maven`、`Liquibase` 相关的配置信息。
+
+#### 生产环境
 
 ### Liquibase 方案思考
 
