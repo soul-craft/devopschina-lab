@@ -150,7 +150,7 @@ Liquibase 是一种数据库模式变更管理解决方案，它让你能够更�
 
 为简单起见，你可以直接使用 `SQL` 编写迁移脚本。你也可以使用与数据库无关的方式，即在 `XML`、`JSON` 或 `YAML` 文件中编写你的变更内容，这样可以实现与特定数据库的解绑。
 
-Liquibase 使用 `SQL`、`XML`、`JSON` 或 `YAML` 格式的变更日志（ [changelog](https://docs.liquibase.com/concepts/changelogs/working-with-changelogs.html) ）文件按顺序列出数据库变更（ [changesets](https://docs.liquibase.com/concepts/changelogs/changelog-formats.html) ）。数据库变更包含变更类型（ [Change Type](https://docs.liquibase.com/change-types/home.html) ），这是应用于数据库的操作类型，例如添加列或主键、插入、删除等等。
+Liquibase 使用 `SQL`、`XML`、`JSON` 或 `YAML` 格式的变更日志（ [changelog](https://docs.liquibase.com/concepts/changelogs/working-with-changelogs.html) ）文件按顺序列出数据库变更（ [changeSets](https://docs.liquibase.com/concepts/changelogs/changelog-formats.html) ）。数据库变更包含变更类型（ [Change Type](https://docs.liquibase.com/change-types/home.html) ），这是应用于数据库的操作类型，例如添加列或主键、插入、删除等等。
 
 ![img](images/liquibase.jpg)
 
@@ -337,16 +337,85 @@ Flyway 也是一个很好用的数据库脚本迁移管理的工具，支持多�
        <include file="db/changelog/20210309_001/tag_20210309.xml"/>
    </databaseChangeLog>
    ```
-   可以看到，该文件中将其他变更文件包含了进来，并指定了他们执行的顺序。其中，
-   1. `tag_initialize.xml`，`tag_20210308.xml`，`tag_20210309.xml` 为打标签，
-   2. `add_person_table.xml` 为新增 `person` 表，
+   可以看到，节点 `databaseChangeLog` 即为前文提到的 _**变更日志（ changelog ）**_。该文件中将其他变更文件包含了进来，并指定了他们执行的顺序。其中，
+   1. `tag_initialize.xml`，`tag_20210308.xml`，`tag_20210309.xml` 给数据库打标签，
+   2. `add_person_table.xml` 新增 `person` 表，
    3. `add_person_records.xml` 往 `person` 表中添加记录，
    4. `create_people_view.xml` 创建 `people` 视图。
 
-2. 打标签，
+2. 给数据库打标签，以 `tag_initialize.xml` 为例，
+   ```xml
+   <?xml version="1.0" encoding="UTF-8"?>
+   <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+       <changeSet id="initialize_001_1" author="scott">
+           <tagDatabase tag="version_initialize" />
+       </changeSet>
+   </databaseChangeLog>
+   ```
+   1. 节点 `changeSet` 即为前文提到的 ***数据库变更（ changeSets ）*** 。属性 `id` 指定变更的唯一ID，`author` 属性指定变更的作者。它的子节点可以指定各种各样的变更类型（ [Change Type](https://docs.liquibase.com/change-types/home.html) ）。
+   2. 节点 `tagDatabase` 即为前文提到的 **_变更类型（ Change Type ）_** 之一的 **给数据库打标签**。该标签可用于之后的回退功能，作为一个回退点。 `tag` 属性指定标签的名称。详细信息可参见：[tagDatabase](https://docs.liquibase.com/change-types/tag-database.html) 。
 3. 新增表，
+   ```xml
+   <?xml version="1.0" encoding="UTF-8"?>
+   <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+       <changeSet id="20210308_001_1" author="scott">
+           <createTable tableName="person" remarks="Person">
+               <column name="id" type="int">
+                   <constraints primaryKey="true" nullable="false"/>
+               </column>
+               <column name="name" type="varchar(100)">
+                   <constraints nullable="false"/>
+               </column>
+           </createTable>
+       </changeSet>
+   </databaseChangeLog>
+   ```
+   1. 节点 `createTable` 即为前文提到的 **_变更类型（ Change Type ）_** 之一的 **创建表**。`tablName` 指定表的名称，`remarks` 指定表的描述信息。详细信息可参见：[createTable](https://docs.liquibase.com/change-types/create-table.html) 。
+   2. `column` 节点指定表的列，列的顺序为从上往下依次排列。`id` 指定列的名称，`type` 指定列的类型。
+   3. `constraints` 节点指定列的约束信息，如主键约束、非空约束等。
+   4. 想要更多较为复杂的功能，可以参见官方文档：[Columns](https://docs.liquibase.com/concepts/changelogs/attributes/column.html) 。
 4. 往表中添加记录，
+   ```xml
+   <?xml version="1.0" encoding="UTF-8"?>
+   <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+       <changeSet id="20210308_001_2" author="scott">
+           <insert tableName="person">
+               <column name="id" value="1"/>
+               <column name="name" value="Scott"/>
+           </insert>
+           <insert tableName="person">
+               <column name="id" value="2"/>
+               <column name="name" value="Jeniffer"/>
+           </insert>
+           <rollback>delete from person where id = 1 or id = 2</rollback>
+       </changeSet>
+   </databaseChangeLog>
+   ```
+   1. 节点 `insert` 即为前文提到的 **_变更类型（ Change Type ）_** 之一的 **插入数据**。属性 `tableName` 指定插入的表名。详细信息可参见：[insert](https://docs.liquibase.com/change-types/insert.html) 。
+   2. `column` 节点指定插入列的名称（`name` 属性）与对应的值（`value` 属性）。
+   3. 也可在 `changeSet` 中用 `rollback` 节点指定自定义的回退脚本（如果不指定，一些变更类型也会自动生成相应的回退脚本）。具体信息可参见：[auto rollback](https://docs.liquibase.com/workflows/liquibase-community/liquibase-auto-rollback.html) 。
 5. 创建视图
+   ```xml
+   <?xml version="1.0" encoding="UTF-8"?>
+   <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+       <changeSet id="20210309_001_1" author="scott">
+           <createView viewName="people" replaceIfExists="true" remarks="A simple view for person">
+               select id, name from person
+           </createView>
+       </changeSet>
+   </databaseChangeLog>
+   ```
+   1. 节点 `createView` 即为前文提到的 **_变更类型（ Change Type ）_** 之一的 **创建视图**。详细信息可参见：[createView](https://docs.liquibase.com/change-types/create-view.html) 。
+   2. 其中，属性 `viewName` 指定视图的名称，属性 `replaceIfExists` 标识是否替换原有的视图，属性 `remarks` 指定视图的描述信息。
+   3. 节点的内容则指定视图的具体`SQL`语句。
 
 接下来，我们讲一下开发环境中 liquibase 的打包及运行方法。
 
