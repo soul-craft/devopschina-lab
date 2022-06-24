@@ -324,6 +324,25 @@ Flyway 也是一个很好用的数据库脚本迁移管理的工具，支持多�
 接下来，我们讲一下 liquibase 变更脚本的结构及一些简单的使用方法。
 
 1. 主引导文件，
+   ```xml
+   <?xml version="1.0" encoding="UTF-8"?>
+   <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+       <include file="db/changelog/tag_initialize.xml"/>
+       <include file="db/changelog/20210308_001/add_person_table.xml"/>
+       <include file="db/changelog/20210308_001/add_person_records.xml"/>
+       <include file="db/changelog/20210308_001/tag_20210308.xml"/>
+       <include file="db/changelog/20210309_001/create_people_view.xml"/>
+       <include file="db/changelog/20210309_001/tag_20210309.xml"/>
+   </databaseChangeLog>
+   ```
+   可以看到，该文件中将其他变更文件包含了进来，并指定了他们执行的顺序。其中，
+   1. `tag_initialize.xml`，`tag_20210308.xml`，`tag_20210309.xml` 为打标签，
+   2. `add_person_table.xml` 为新增 `person` 表，
+   3. `add_person_records.xml` 往 `person` 表中添加记录，
+   4. `create_people_view.xml` 创建 `people` 视图。
+
 2. 打标签，
 3. 新增表，
 4. 往表中添加记录，
