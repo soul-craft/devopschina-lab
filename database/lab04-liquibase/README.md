@@ -124,7 +124,7 @@
 
 ### 方案分析
 
-1. 本方案可解决前文描述的四个问题中的第4个问题，可以快速从零开始创建一个新数据库实例，且与生产保持基本一致（生产环境中系统运行时新增的数据除外）。
+1. 本方案可解决前文描述的四个问题中的第4个问题，可以快速从零开始创建一个新数据库实例，且与生产环境保持基本一致（生产环境中系统运行时新增或修改的数据除外）。
 
     - [ ] 该机器上的数据库当前处于什么状态？
     - [ ] 想要运行的脚本是否已经应用过了？
@@ -148,14 +148,13 @@
 
 Liquibase 是一种数据库模式变更管理解决方案，它让你能够更快、更安全地在各个环境（从开发到生产）修改和发布数据库变更。
 
-为简单起见，你可以直接使用 SQL 编写迁移脚本。也可以使用与数据库无关的方式，即在 XML、JSON 或 YAML 文件中编写你的变更内容，这样可以实现与特定数据库的解绑。
+为简单起见，你可以直接使用 `SQL` 编写迁移脚本。你也可以使用与数据库无关的方式，即在 `XML`、`JSON` 或 `YAML` 文件中编写你的变更内容，这样可以实现与特定数据库的解绑。
 
-Liquibase 使用 SQL、XML、JSON 或 YAML格式的变更日志（ [changelog](https://docs.liquibase.com/concepts/changelogs/working-with-changelogs.html)）文件按顺序列出数据库变更（ [changesets](https://docs.liquibase.com/concepts/changelogs/changelog-formats.html)）。数据库变更包含变更类型（ [Change Type](https://docs.liquibase.com/change-types/home.html)），这是应用于数据库的操作类型，例如添加列或主键、插入、删除等等。
+Liquibase 使用 `SQL`、`XML`、`JSON` 或 `YAML` 格式的变更日志（ [changelog](https://docs.liquibase.com/concepts/changelogs/working-with-changelogs.html) ）文件按顺序列出数据库变更（ [changesets](https://docs.liquibase.com/concepts/changelogs/changelog-formats.html) ）。数据库变更包含变更类型（ [Change Type](https://docs.liquibase.com/change-types/home.html) ），这是应用于数据库的操作类型，例如添加列或主键、插入、删除等等。
 
 ![img](images/liquibase.jpg)
 
-Liquibase 支持 6 种基本类型的命令：update、rollback、snapshot、diff、status 以及 utility。当你使用 update 命令部署你的第一个变更时，Liquibase
-会检查数据库连接信息，包括用户信息、数据库 URL 和 JDBC 驱动程序等，这些信息存储在 liquibase.properties 配置文件中。
+Liquibase 支持 6 种基本类型的命令：update、rollback、snapshot、diff、status 以及 utility。当你使用 update 命令部署你的第一个变更时，Liquibase 会检查数据库连接信息，包括用户信息、数据库 URL 和 JDBC 驱动程序等，这些信息存储在 liquibase.properties 配置文件中。
 
 当你第一次部署变更时，Liquibase 会在你的数据库中创建两张表：[DATABASECHANGELOG](https://docs.liquibase.com/concepts/tracking-tables/databasechangelog-table.html) 和 [DATABASECHANGELOGLOCK](https://docs.liquibase.com/concepts/tracking-tables/databasechangeloglock-table.html) 。
 
@@ -169,7 +168,7 @@ Liquibase 提供了多种管理数据库变更的方法：
 
 - 使用 [Liquibase Java API](https://www.liquibase.org/javadoc/) 并将 Liquibase 集成到你的应用程序中。
 
-- 使用 [Maven](https://docs.liquibase.com/tools-integrations/maven/home.html)、 [Spring Boot](https://docs.liquibase.com/tools-integrations/springboot/home.html)、 [Ant](https://docs.liquibase.com/tools-integrations/ant/home.html)、 [Jenkins](https://docs.liquibase.com/workflows/liquibase-community/using-the-jenkins-pipeline-stage-with-spinnaker.html)、 [GitHub Actions](https://docs.liquibase.com/workflows/liquibase-community/setup-github-actions-workflow.html) 或其他 CI/CD 工具将 Liquibase 集成到你的构建过程中。
+- 使用 [Maven](https://docs.liquibase.com/tools-integrations/maven/home.html) 、 [Spring Boot](https://docs.liquibase.com/tools-integrations/springboot/home.html) 、 [Ant](https://docs.liquibase.com/tools-integrations/ant/home.html) 、 [Jenkins](https://docs.liquibase.com/workflows/liquibase-community/using-the-jenkins-pipeline-stage-with-spinnaker.html) 、 [GitHub Actions](https://docs.liquibase.com/workflows/liquibase-community/setup-github-actions-workflow.html) 或其他 CI/CD 工具将 Liquibase 集成到你的构建过程中。
 
 - 以 [Docker](https://docs.liquibase.com/workflows/liquibase-community/using-liquibase-and-docker.html) 容器的方式使用。
 
