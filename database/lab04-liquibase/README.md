@@ -232,6 +232,8 @@ Flyway 也是一个很好用的数据库脚本迁移管理的工具，支持多�
 
 接下来我们讲一下 Liquibase 的数据库变更脚本的开发、打包及运行等相关操作。
 
+##### 环境配置
+
 1. 使用 IDEA 或者 VS Code 打开克隆好的项目，
 2. 打开 pom.xml 文件，可以看到，我们添加了 `MySQL` 的驱动依赖，各位可以自行选择合适的驱动版本，
 
@@ -320,6 +322,8 @@ Flyway 也是一个很好用的数据库脚本迁移管理的工具，支持多�
     5. `logLevel`，`logFile`，指定日志相关的配置。
 
 6. 以上就是 `Maven`、`Liquibase` 相关的配置信息。
+
+##### 代码结构
 
 接下来，我们讲一下 liquibase 变更脚本的结构及一些简单的使用方法。
 
@@ -417,13 +421,108 @@ Flyway 也是一个很好用的数据库脚本迁移管理的工具，支持多�
    2. 其中，属性 `viewName` 指定视图的名称，属性 `replaceIfExists` 标识是否替换原有的视图，属性 `remarks` 指定视图的描述信息。
    3. 节点的内容则指定视图的具体`SQL`语句。
 
-接下来，我们讲一下开发环境中 liquibase 的打包及运行方法。
+##### 打包运行
+
+接下来，我们讲一下开发环境中 liquibase 的打包及运行方法。我们以命令行及界面操作两种方式进行讲解。
+
+###### 命令行操作
+
+
+1. 编译打包，可使用如下命令打包，其中 `-P dev` 指定使用 `dev` 的 Profile（下同），
+   ```Bash
+   mvn -P dev clean package
+   ```
+2. 生成变更脚本，检查变更脚本，
+   ```Bash
+   mvn -P dev liquibase:updateSQL
+   ```
+   生成的变更脚本位于 `target/liquibase/migrate.sql`，可检查一下看看脚本是否存在问题。
+3. 如果检查没有问题，则可使用如下命令运行变更，
+   ```Bash
+   mvn -P dev liquibase:update
+   ```
+4. 运行完后可以检查数据库对象是否存在问题，同时检查一下`DATABASECHANGELOG`表中的记录是否存在异常。
+   1. 可以看到，`person`表和`people`视图已经创建成功，并已插入相应记录，所有变更脚本均已执行成功，并记录到了`DATABASECHANGELOG`表中。 
+   ```mysql
+   mysql> desc person;
+   +-------+--------------+------+-----+---------+-------+
+   | Field | Type         | Null | Key | Default | Extra |
+   +-------+--------------+------+-----+---------+-------+
+   | id    | int          | NO   | PRI | NULL    |       |
+   | name  | varchar(100) | NO   |     | NULL    |       |
+   +-------+--------------+------+-----+---------+-------+
+   2 rows in set (0.01 sec)
+   
+   mysql> desc people;
+   +-------+--------------+------+-----+---------+-------+
+   | Field | Type         | Null | Key | Default | Extra |
+   +-------+--------------+------+-----+---------+-------+
+   | id    | int          | NO   |     | NULL    |       |
+   | name  | varchar(100) | NO   |     | NULL    |       |
+   +-------+--------------+------+-----+---------+-------+
+   2 rows in set (0.01 sec)
+   
+   mysql> desc people;
+   +-------+--------------+------+-----+---------+-------+
+   | Field | Type         | Null | Key | Default | Extra |
+   +-------+--------------+------+-----+---------+-------+
+   | id    | int          | NO   |     | NULL    |       |
+   | name  | varchar(100) | NO   |     | NULL    |       |
+   +-------+--------------+------+-----+---------+-------+
+   2 rows in set (0.01 sec)
+   
+   mysql> select ID,AUTHOR,FILENAME,EXECTYPE,MD5SUM,TAG from DATABASECHANGELOG;
+   +------------------+--------+--------------------------------------------------+----------+------------------------------------+--------------------+
+   | ID               | AUTHOR | FILENAME                                         | EXECTYPE | MD5SUM                             | TAG                |
+   +------------------+--------+--------------------------------------------------+----------+------------------------------------+--------------------+
+   | initialize_001_1 | scott  | db/changelog/tag_initialize.xml                  | EXECUTED | 8:20839215b888a482d78980d3680a5672 | version_initialize |
+   | 20210308_001_1   | scott  | db/changelog/20210308_001/add_person_table.xml   | EXECUTED | 8:fc29dbddad05fc9d3de7527a1d0a7620 | NULL               |
+   | 20210308_001_2   | scott  | db/changelog/20210308_001/add_person_records.xml | EXECUTED | 8:207c0b7f49daa4351f3c3904849c0089 | NULL               |
+   | 20210308_001_3   | scott  | db/changelog/20210308_001/tag_20210308.xml       | EXECUTED | 8:3d747dd0d240064cae07d99897faf13d | version_20210308   |
+   | 20210309_001_1   | scott  | db/changelog/20210309_001/create_people_view.xml | EXECUTED | 8:ed3f61f89e77083a84f7355a25f02867 | NULL               |
+   | 20210309_001_2   | scott  | db/changelog/20210309_001/tag_20210309.xml       | EXECUTED | 8:ea3c9f45c8b2d7cb175e400e66210a99 | version_20210309   |
+   +------------------+--------+--------------------------------------------------+----------+------------------------------------+--------------------+
+   6 rows in set (0.00 sec)
+   ```
+
+5. 如果存在问题，需要回退变更，可以回退到指定的标签位置，例如如果想要回退到标签 `version_20210308` 所处位置（标签 `version_20210308` 之后的变更将全部丢失，即创建 `version_20210309`和`version_20210308`标签以及`people` 视图的操作将被回退），可执行如下操作：
+   1. 生成回退脚本，并检查，
+       ```Bash
+       mvn -P dev liquibase:rollbackSQL -Dliquibase.rollbackTag=version_20210308
+       ```
+   2. 执行回退脚本，
+       ```Bash
+       mvn -P dev liquibase:rollback -Dliquibase.rollbackTag=version_20210308
+       ```
+   3. 检查回退是否成功，可以看到 `people` 视图已被删除，标签 `version_20210309` 和 `version_20210308` 已不存在。
+       ```mysql
+       mysql> select ID,AUTHOR,FILENAME,EXECTYPE,MD5SUM,TAG from DATABASECHANGELOG;
+       +------------------+--------+--------------------------------------------------+----------+------------------------------------+--------------------+
+       | ID               | AUTHOR | FILENAME                                         | EXECTYPE | MD5SUM                             | TAG                |
+       +------------------+--------+--------------------------------------------------+----------+------------------------------------+--------------------+
+       | initialize_001_1 | scott  | db/changelog/tag_initialize.xml                  | EXECUTED | 8:20839215b888a482d78980d3680a5672 | version_initialize |
+       | 20210308_001_1   | scott  | db/changelog/20210308_001/add_person_table.xml   | EXECUTED | 8:fc29dbddad05fc9d3de7527a1d0a7620 | NULL               |
+       | 20210308_001_2   | scott  | db/changelog/20210308_001/add_person_records.xml | EXECUTED | 8:207c0b7f49daa4351f3c3904849c0089 | NULL               |
+       +------------------+--------+--------------------------------------------------+----------+------------------------------------+--------------------+
+       3 rows in set (0.00 sec)
+      
+       mysql> desc people;
+       ERROR 1146 (42S02): Table 'liquibase_test.people' doesn't exist
+       ```
+
+###### 界面操作
 
 1. 编译打包
+
+   界面中选择 Maven 插件，首先确认 Profiles 选择的是 **dev**，然后再展开 Lifecycle节点，先双击 clean 清空项目临时编译结果，再双击 package 进行重新编译和打包。
 2. 生成变更脚本，检查变更脚本
-3. 与当前数据库环境进行比较
-4. 运行变更
-5. 回退变更
+   
+   在 Maven 插件中展开 liquibase 插件，双击 `liquibase:updateSQL`，生成的变更脚本位于 `target/liquibase/migrate.sql`，可检查一下看看脚本是否存在问题。
+3. 运行变更
+
+   在 Maven 插件中展开 liquibase 插件，双击 `liquibase:update`，即会运行变更。
+4. 运行完后可以检查数据库对象是否存在问题，同时检查一下`DATABASECHANGELOG`表中的记录是否存在异常。
+5. 回退变更需要执行命令行操作，可参考上一章节的命令行操作。
 
 #### 生产环境
 
